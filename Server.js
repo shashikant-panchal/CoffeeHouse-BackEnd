@@ -1,26 +1,27 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const bcrypt = require('bcrypt');
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const bcrypt = require("bcrypt");
 
 const app = express();
-const PORT = 3000;
+// const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+console.log(process.env)
 
 app.use(cors());
 app.use(bodyParser.json());
 
-mongoose.connect(
-  'mongodb+srv://coffeeshop:coffeeshop@coffeeshop.ewl9vjy.mongodb.net/',
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  },
-);
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-db.once('open', () => console.log('Connected to MongoDB'));
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
+db.once("open", () => console.log("Connected to MongoDB"));
 
 const UserSchema = new mongoose.Schema({
   name: String,
@@ -29,9 +30,9 @@ const UserSchema = new mongoose.Schema({
   password: String,
 });
 
-UserSchema.pre('save', async function (next) {
+UserSchema.pre("save", async function (next) {
   const user = this;
-  if (user.isModified('password') || user.isNew) {
+  if (user.isModified("password") || user.isNew) {
     try {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(user.password, salt);
@@ -53,56 +54,56 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
   }
 };
 
-const User = mongoose.model('User', UserSchema);
+const User = mongoose.model("User", UserSchema);
 
-app.get('/api/users', (req, res) => {
-  res.send('MongoDB Connected');
+app.get("/api/users", (req, res) => {
+  res.send("MongoDB Connected");
 });
 
-app.post('/api/users', async (req, res) => {
+app.post("/api/users", async (req, res) => {
   try {
     const user = new User(req.body);
     await user.save();
     res.status(201).json(user);
   } catch (error) {
     console.error(error);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   }
 });
 
-app.get('/api/login', (req, res) => {
-  res.send('MongoDB Connected for Login');
+app.get("/api/login", (req, res) => {
+  res.send("MongoDB Connected for Login");
 });
 
-app.post('/api/login', async (req, res) => {
+app.post("/api/login", async (req, res) => {
   try {
-    const {email, password} = req.body;
-    console.log('Received login request for email:', email);
+    const { email, password } = req.body;
+    console.log("Received login request for email:", email);
 
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({error: 'User not found.'});
+      return res.status(400).json({ error: "User not found." });
     }
 
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      return res.status(401).json({error: 'Invalid password.'});
+      return res.status(401).json({ error: "Invalid password." });
     }
 
-    const {name, phoneNumber} = user;
-    res.status(200).json({name, phoneNumber});
+    const { name, phoneNumber } = user;
+    res.status(200).json({ name, phoneNumber });
   } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({error: 'Server Error'});
+    console.error("Error during login:", error);
+    res.status(500).json({ error: "Server Error" });
   }
 });
 
 const OrderSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "User",
   },
   items: [
     {
@@ -121,21 +122,21 @@ const OrderSchema = new mongoose.Schema({
   paymentId: String,
 });
 
-const Order = mongoose.model('Order', OrderSchema);
+const Order = mongoose.model("Order", OrderSchema);
 
-app.get('/api/orders', async (req, res) => {
+app.get("/api/orders", async (req, res) => {
   try {
     const orders = await Order.find();
-    res.json({orders});
+    res.json({ orders });
   } catch (error) {
-    console.error('Error fetching orders:', error);
-    res.status(500).json({error: 'Internal server error'});
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-app.post('/api/orders', async (req, res) => {
+app.post("/api/orders", async (req, res) => {
   try {
-    const {userId, items, totalAmount, orderTime, paymentId} = req.body;
+    const { userId, items, totalAmount, orderTime, paymentId } = req.body;
     const order = new Order({
       userId,
       items,
@@ -147,18 +148,18 @@ app.post('/api/orders', async (req, res) => {
     res.status(201).json(order);
   } catch (error) {
     console.error(error);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   }
 });
 
-app.delete('/api/orders/:orderId', async (req, res) => {
+app.delete("/api/orders/:orderId", async (req, res) => {
   try {
-    const {orderId} = req.params;
+    const { orderId } = req.params;
     await Order.findByIdAndDelete(orderId);
-    res.status(200).json({message: 'Order cancelled successfully'});
+    res.status(200).json({ message: "Order cancelled successfully" });
   } catch (error) {
-    console.error('Error cancelling order:', error);
-    res.status(500).json({error: 'Internal server error'});
+    console.error("Error cancelling order:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
