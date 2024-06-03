@@ -56,7 +56,7 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
 
 const User = mongoose.model("User", UserSchema);
 
-app.get("/api/", (req, res) => {
+app.get("/", (req, res) => {
   res.send("Is in Production");
 });
 
