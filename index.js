@@ -58,7 +58,7 @@ const User = mongoose.model("User", UserSchema);
 
 app.get("/", (req, res) => {
   res.send("Nitin");
-});
+};
 
 
 app.get("/api/users", (req, res) => {
