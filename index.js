@@ -74,7 +74,7 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
 const User = mongoose.model("User", UserSchema);
 
 app.get("/", (req, res) => {
-  res.send("Nitin");
+  res.send("Coffee House");
 });
 
 
